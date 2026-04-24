@@ -310,4 +310,5 @@
   document.getElementById('btn-save-profile')?.addEventListener('click', () => {
     showToast('✅ Profile saved!');
   });
+
 })();

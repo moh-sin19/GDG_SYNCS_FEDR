@@ -65,6 +65,8 @@
     .cal-event.type-teacher-low::before{background:#22c55e}
     .cal-event.type-teacher-submitted{color:#a5b4fc;text-decoration:line-through;opacity:.6}
     .cal-event.type-teacher-submitted::before{background:#4f6ef7}
+    .cal-event.type-own-completed{color:#a5b4fc;text-decoration:line-through;opacity:.7}
+    .cal-event.type-own-completed::before{background:#4f6ef7}
     .cal-event.type-personal{color:#d8b4fe}
     .cal-event.type-personal::before{background:#a855f7}
     .cal-event.type-own-high{color:#fca5a5}
@@ -423,7 +425,7 @@
     const submissions=getSubmissions();
     assignments.forEach(a=>{ if(!a.dueDate)return; const sub=submissions.find(s=>s.taskId==a.id&&s.studentName===STUDENT_NAME); addEv(a.dueDate,{ label:a.title, cls:sub?'type-teacher-submitted':'type-teacher-'+(a.priority||'medium'), type:'📋 Teacher task', due:a.dueDate, priority:a.priority, status:sub?'Submitted ✓':'Pending', note:a.desc }); });
     schedule.forEach(e=>{ const ds=e.time?e.time.split('T')[0]:null; if(!ds)return; const timeStr=e.time?new Date(e.time).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}):''; addEv(ds,{ label:(timeStr?timeStr+' ':'')+e.title, cls:'type-personal', type:'📅 Personal event', due:ds, status:'', note:e.notes }); });
-    ownTasks.filter(t=>t.dueDate).forEach(t=>{ addEv(t.dueDate,{ label:t.title, cls:'type-own-'+(t.priority||'medium'), type:'✅ My task', due:t.dueDate, priority:t.priority, status:t.done?'Done ✓':'Pending', note:t.desc }); });
+    ownTasks.filter(t=>t.dueDate).forEach(t=>{ addEv(t.dueDate,{ label:t.title, cls:t.done?'type-own-completed':'type-own-'+(t.priority||'medium'), type:'✅ My task', due:t.dueDate, priority:t.priority, status:t.done?'Done ✓':'Pending', note:t.desc }); });
 
     const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     let html=DAYS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
@@ -529,15 +531,16 @@
   document.querySelector('#panel-schedule .cal-nav-btn[type="button"]:last-child')?.addEventListener('click', () => changeMonth(1));
   document.querySelector('#panel-schedule .cal-add-row button')?.addEventListener('click', saveScheduleEvent);
   const scheduleTimeInput = document.getElementById('sc-time');
-  scheduleTimeInput?.addEventListener('focus', () => {
-    scheduleTimeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-  scheduleTimeInput?.addEventListener('click', () => {
-    scheduleTimeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  function keepDatePickerVisible() {
+    if (!scheduleTimeInput) return;
+    scheduleTimeInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => scheduleTimeInput.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+  }
+  scheduleTimeInput?.addEventListener('pointerdown', keepDatePickerVisible);
+  scheduleTimeInput?.addEventListener('focus', keepDatePickerVisible);
+  scheduleTimeInput?.addEventListener('click', keepDatePickerVisible);
   document.querySelector('#sp-profile .btn.btn-primary-green')?.addEventListener('click', saveProfile);
   document.querySelector('#sp-data .btn.btn-danger')?.addEventListener('click', clearMyTasks);
-
   renderAll();
   </script>
 </body>

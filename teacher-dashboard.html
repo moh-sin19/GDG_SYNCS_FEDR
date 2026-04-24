@@ -322,8 +322,8 @@
     document.getElementById('t-name').value = user.name || '';
     document.getElementById('t-email').value = user.email || '';
     document.getElementById('t-pass').value = '';
-    document.getElementById('t-task-count').textContent = getAssignments().length + ' tasks assigned';
-    document.getElementById('t-student-count').textContent = getAccounts().length + ' registered students';
+    document.getElementById('t-task-count').textContent = getAssignments().filter(a=>a.createdBy===user.email).length + ' tasks assigned';
+    document.getElementById('t-student-count').textContent = getStudents().length + ' registered students';
     showSettingTab('profile');
   }
 
@@ -357,7 +357,7 @@
       const div = document.createElement('div');
       div.className = 'student-check-item';
       const displayName = displayStudentName(s.name);
-      div.innerHTML = `<input type="checkbox" id="sc-${s.email}" value="${displayName}" />
+      div.innerHTML = `<input type="checkbox" id="sc-${s.email}" value="${s.name}" />
         <label for="sc-${s.email}">${displayName} <span style="color:#555;font-size:.75rem;">(${s.email})</span></label>`;
       list.appendChild(div);
     });
@@ -436,7 +436,7 @@
       return;
     }
     tbody.innerHTML = assignments.map(a=>{
-      const subs = submissions.filter(s=>s.taskId===a.id);
+      const subs = submissions.filter(s=>String(s.taskId)===String(a.id));
       const isSubmitted = subs.length>0;
       const today = new Date().toISOString().split('T')[0];
 
@@ -462,7 +462,7 @@
   }
 
   function toggleDetail(id) {
-    const submissions = getSubmissions().filter(s=>s.taskId===id);
+    const submissions = getSubmissions().filter(s=>String(s.taskId)===String(id));
     const assignment  = getAssignments().find(a=>a.id==id);
     const panel = document.getElementById('detail-panel');
     if (activeDetailId===id) { panel.classList.remove('open'); activeDetailId=null; return; }
