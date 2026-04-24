@@ -67,8 +67,12 @@
     .cal-event.type-teacher-submitted::before{background:#4f6ef7}
     .cal-event.type-personal{color:#d8b4fe}
     .cal-event.type-personal::before{background:#a855f7}
-    .cal-event.type-own{color:#5eead4}
-    .cal-event.type-own::before{background:#14b8a6}
+    .cal-event.type-own-high{color:#fca5a5}
+    .cal-event.type-own-high::before{background:#ef4444}
+    .cal-event.type-own-medium{color:#fde68a}
+    .cal-event.type-own-medium::before{background:#eab308}
+    .cal-event.type-own-low{color:#86efac}
+    .cal-event.type-own-low::before{background:#22c55e}
     .cal-popup{display:none;position:fixed;background:#1e2130;border:1px solid #2a2d3a;border-radius:10px;padding:.85rem 1rem;width:220px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.5)}
     .cal-popup.open{display:block}
     .cal-popup-title{font-size:.88rem;font-weight:700;color:#fff;margin-bottom:.35rem}
@@ -419,7 +423,7 @@
     const submissions=getSubmissions();
     assignments.forEach(a=>{ if(!a.dueDate)return; const sub=submissions.find(s=>s.taskId==a.id&&s.studentName===STUDENT_NAME); addEv(a.dueDate,{ label:a.title, cls:sub?'type-teacher-submitted':'type-teacher-'+(a.priority||'medium'), type:'📋 Teacher task', due:a.dueDate, priority:a.priority, status:sub?'Submitted ✓':'Pending', note:a.desc }); });
     schedule.forEach(e=>{ const ds=e.time?e.time.split('T')[0]:null; if(!ds)return; const timeStr=e.time?new Date(e.time).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}):''; addEv(ds,{ label:(timeStr?timeStr+' ':'')+e.title, cls:'type-personal', type:'📅 Personal event', due:ds, status:'', note:e.notes }); });
-    ownTasks.filter(t=>t.dueDate).forEach(t=>{ addEv(t.dueDate,{ label:t.title, cls:'type-own', type:'✅ My task', due:t.dueDate, priority:t.priority, status:t.done?'Done ✓':'Pending', note:t.desc }); });
+    ownTasks.filter(t=>t.dueDate).forEach(t=>{ addEv(t.dueDate,{ label:t.title, cls:'type-own-'+(t.priority||'medium'), type:'✅ My task', due:t.dueDate, priority:t.priority, status:t.done?'Done ✓':'Pending', note:t.desc }); });
 
     const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     let html=DAYS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
