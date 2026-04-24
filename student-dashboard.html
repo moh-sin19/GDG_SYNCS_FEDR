@@ -114,11 +114,11 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Student Menu</div>
-      <a href="student-dashboard.html" class="nav-item active"><span class="nav-icon">🏠</span> Dashboard</a>
-      <a href="#" class="nav-item" onclick="showTab('assigned');return false;"><span class="nav-icon">📋</span> Assigned Tasks<span class="nav-badge" id="sidebar-task-count">0</span></a>
-      <a href="#" class="nav-item" onclick="showTab('schedule');return false;"><span class="nav-icon">📅</span> My Schedule</a>
-      <a href="#" class="nav-item" onclick="showTab('own');return false;"><span class="nav-icon">✅</span> My Tasks</a>
-      <a href="settings.html" class="nav-item" onclick="showTab('settings');return false;"><span class="nav-icon">⚙️</span> Settings</a>
+      <a href="#" class="nav-item active" data-nav="assigned" onclick="showTab('assigned');return false;"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="#" class="nav-item" data-nav="assigned" onclick="showTab('assigned');return false;"><span class="nav-icon">📋</span> Assigned Tasks<span class="nav-badge" id="sidebar-task-count">0</span></a>
+      <a href="#" class="nav-item" data-nav="schedule" onclick="showTab('schedule');return false;"><span class="nav-icon">📅</span> My Schedule</a>
+      <a href="#" class="nav-item" data-nav="own" onclick="showTab('own');return false;"><span class="nav-icon">✅</span> My Tasks</a>
+      <a href="#" class="nav-item" data-nav="settings" onclick="showTab('settings');return false;"><span class="nav-icon">⚙️</span> Settings</a>
     </div>
     <div class="sidebar-footer">
       <div class="user-card">
@@ -330,6 +330,9 @@
     TABS.forEach(t=>{
       document.getElementById('panel-'+t).style.display = t===tab?'':'none';
       document.getElementById('tab-'+t).className='tab'+(t===tab?' active':'');
+    });
+    document.querySelectorAll('.sidebar .nav-item[data-nav]').forEach(item => {
+      item.classList.toggle('active', item.dataset.nav === tab || (tab === 'assigned' && item.dataset.nav === 'assigned'));
     });
     if(tab==='schedule') renderCalendar();
     if(tab==='own')      renderOwnTasks();

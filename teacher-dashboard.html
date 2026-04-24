@@ -67,17 +67,17 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Teacher Menu</div>
-      <a href="teacher-dashboard.html" class="nav-item active">
+      <a href="#" class="nav-item active" data-nav="assigned" onclick="showTab('assigned');return false;">
         <span class="nav-icon">🏠</span> Dashboard
       </a>
-      <a href="#" class="nav-item" onclick="showTab('assigned');return false;">
+      <a href="#" class="nav-item" data-nav="assigned" onclick="showTab('assigned');return false;">
         <span class="nav-icon">📋</span> Assigned Tasks
         <span class="nav-badge" id="sidebar-task-count">0</span>
       </a>
-      <a href="#" class="nav-item" onclick="showTab('submissions');return false;">
+      <a href="#" class="nav-item" data-nav="submissions" onclick="showTab('submissions');return false;">
         <span class="nav-icon">📬</span> Submissions
       </a>
-      <a href="settings.html" class="nav-item">
+      <a href="#" class="nav-item" data-nav="settings" onclick="showTab('settings');return false;">
         <span class="nav-icon">⚙️</span> Settings
       </a>
     </div>
@@ -290,6 +290,9 @@
     TABS.forEach(t=>{
       document.getElementById('panel-'+t).style.display = t===tab?'':'none';
       document.getElementById('tab-'+t).className='tab'+(t===tab?' active':'');
+    });
+    document.querySelectorAll('.sidebar .nav-item[data-nav]').forEach(item => {
+      item.classList.toggle('active', item.dataset.nav === tab || (tab === 'assigned' && item.dataset.nav === 'assigned'));
     });
     if(tab==='submissions') renderSubmissions();
     if(tab==='settings')    initTeacherSettings();
