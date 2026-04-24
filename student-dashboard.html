@@ -231,7 +231,7 @@
                 <div class="settings-card-header"><div class="settings-card-title">Notifications</div></div>
                 <div class="settings-card-body">
                   <div class="settings-row"><div><div class="settings-row-label">Task Due Reminders</div><div class="settings-row-sub">Get notified when a task is due soon</div></div><label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label></div>
-                  <div class="settings-row"><div><div class="settings-row-label">Overdue Alerts</div><div class="settings-row-sub">Alert when tasks pass their due date</div></div><label class="toggle"><input type="checkbox" checked /></label></div>
+                  <div class="settings-row"><div><div class="settings-row-label">Overdue Alerts</div><div class="settings-row-sub">Alert when tasks pass their due date</div></div><label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label></div>
                 </div>
               </div>
             </div>
@@ -463,7 +463,7 @@
   }
 
   function renderOwnTasks(){ const tasks=getOwnTasks(), el=document.getElementById('own-list'); if(!tasks.length){ el.innerHTML=`<div class="empty-state"><div style="font-size:2rem;margin-bottom:.5rem;">✅</div>No personal tasks yet.</div>`; return; } el.innerHTML=tasks.map(t=>{ const dot={high:'🔴',medium:'🟡',low:'🟢'}[t.priority]||'', due=t.dueDate?new Date(t.dueDate+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'}):''; return `<div class="task-card"><div class="task-card-left"><div class="task-card-title" style="${t.done?'text-decoration:line-through;opacity:.5;':''}">${t.title}</div>${t.desc?`<div class="task-card-desc">${t.desc}</div>`:''}<div class="task-card-meta"><span class="badge badge-own">Personal</span>${dot} ${t.priority}${due?`<span>📅 ${due}</span>`:''}</div></div><div style="display:flex;flex-direction:column;gap:.4rem;flex-shrink:0;"><button class="btn btn-ghost btn-sm" onclick="toggleOwnTask('${t.id}')">${t.done?'↩ Undo':'✓ Done'}</button><button class="btn btn-ghost btn-sm" onclick="deleteOwnTask('${t.id}')">🗑</button></div></div>`; }).join(''); }
-  function openOwnTaskModal(){ document.getElementById('ot-error').style.display='none'; ['ot-title','ot-desc','ot-date'].forEach(id=>document.getElementById(id).value=''); document.getElementById('ot-priority').value='medium'; document.getElementById('own-overlay').classList.add('open'); document.getElementById('own-modal').classList.add('open'); }
+  function openOwnTaskModal(){ document.getElementById('ot-error').style.display='none'; ['ot-title','ot-desc','ot-date'].forEach(id=>document.getElementById(id).value=''); document.getElementById('ot-priority').value='high'; document.getElementById('own-overlay').classList.add('open'); document.getElementById('own-modal').classList.add('open'); }
   function closeOwnTaskModal(){ document.getElementById('own-overlay').classList.remove('open'); document.getElementById('own-modal').classList.remove('open'); }
   function saveOwnTask(){ const title=document.getElementById('ot-title').value.trim(), err=document.getElementById('ot-error'); if(!title){ err.textContent='Title is required.'; err.style.display='block'; return; } err.style.display='none'; const tasks=getOwnTasks(); tasks.push({ id:Date.now(), title, desc:document.getElementById('ot-desc').value.trim(), priority:document.getElementById('ot-priority').value, dueDate:document.getElementById('ot-date').value, done:false, createdAt:new Date().toISOString() }); saveOwnTasks(tasks); closeOwnTaskModal(); renderOwnTasks(); renderStats(); showToast('Task added!'); }
   function toggleOwnTask(id){ saveOwnTasks(getOwnTasks().map(t=>t.id==id?{...t,done:!t.done}:t)); renderOwnTasks(); }
@@ -472,6 +472,9 @@
   function renderStats(){ const a=getMyAssignments(), s=getSubmissions().filter(s=>s.studentName===STUDENT_NAME); document.getElementById('stat-total').textContent=a.length; document.getElementById('stat-submitted').textContent=s.length; document.getElementById('stat-outstanding').textContent=Math.max(0,a.length-s.length); document.getElementById('stat-own').textContent=getOwnTasks().length; document.getElementById('sidebar-task-count').textContent=Math.max(0,a.length-s.length); }
   function showSettingsTab(t){
     document.querySelectorAll('.settings-panel').forEach(el=>el.style.display='none');
+    document.querySelectorAll('.settings-nav-item').forEach(el=>el.classList.remove('active'));
+    const activeNav = [...document.querySelectorAll('.settings-nav-item')].find(el => (el.getAttribute('onclick') || '').includes(`'${t}'`));
+    if (activeNav) activeNav.classList.add('active');
     const target=document.getElementById('sp-'+t);
     if(target) target.style.display='block';
     if(t==='data'){
@@ -511,9 +514,11 @@
   function clearMyTasks(){
     if(!confirm('Delete all your personal tasks?')) return;
     saveOwnTasks([]);
+    saveSchedule([]);
     renderOwnTasks();
+    renderCalendar();
     renderStats();
-    showToast('Personal tasks cleared.');
+    showToast('Personal tasks and events cleared.');
   }
 
   function showToast(msg){ const t=document.createElement('div'); t.className='toast show'; t.textContent=msg; document.querySelector('.toast-container').appendChild(t); setTimeout(()=>t.remove(),3000); }
@@ -523,6 +528,13 @@
   document.querySelector('#panel-schedule .cal-nav-btn[type="button"]:first-child')?.addEventListener('click', () => changeMonth(-1));
   document.querySelector('#panel-schedule .cal-nav-btn[type="button"]:last-child')?.addEventListener('click', () => changeMonth(1));
   document.querySelector('#panel-schedule .cal-add-row button')?.addEventListener('click', saveScheduleEvent);
+  const scheduleTimeInput = document.getElementById('sc-time');
+  scheduleTimeInput?.addEventListener('focus', () => {
+    scheduleTimeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  scheduleTimeInput?.addEventListener('click', () => {
+    scheduleTimeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
   document.querySelector('#sp-profile .btn.btn-primary-green')?.addEventListener('click', saveProfile);
   document.querySelector('#sp-data .btn.btn-danger')?.addEventListener('click', clearMyTasks);
 

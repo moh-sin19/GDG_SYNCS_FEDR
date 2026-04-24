@@ -299,6 +299,15 @@
   }
 
   function showSettingTab(t){
+    document.querySelectorAll('#panel-settings nav > div').forEach(el => {
+      el.style.color = '#888';
+      el.style.background = 'transparent';
+    });
+    const activeNav = [...document.querySelectorAll('#panel-settings nav > div')].find(el => (el.getAttribute('onclick') || '').includes(`'${t}'`));
+    if (activeNav) {
+      activeNav.style.color = '#4f6ef7';
+      activeNav.style.background = 'rgba(79,110,247,.1)';
+    }
     ['profile','notifications','appearance','data'].forEach(id=>{
       const el=document.getElementById('tp-'+id);
       if(el) el.style.display=id===t?'block':'none';
