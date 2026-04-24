@@ -142,9 +142,8 @@
     if (!acc) { showErr('Invalid email, password, or role. Please try again.'); return; }
 
     
-    const sessionRole = acc.role === 'teacher' ? 'educator' : acc.role;
-    localStorage.setItem('tf_user', JSON.stringify({ role: sessionRole, name: acc.name, email: acc.email }));
-    window.location.href = acc.role==='teacher' ? 'teacher-dashboard' : 'student-dashboard';
+    localStorage.setItem('tf_user', JSON.stringify({ role: acc.role, name: acc.name, email: acc.email }));
+    window.location.href = acc.role==='teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
   }
 
   function doSignUp() {
@@ -170,7 +169,7 @@
   document.addEventListener('keydown', e => { if(e.key==='Enter') handleSubmit(); });
 
   const u = JSON.parse(localStorage.getItem('tf_user')||'null');
-  if (u) window.location.href = u.role==='teacher' ? 'teacher-dashboard' : 'student-dashboard';
+  if (u) window.location.href = u.role==='teacher' ? 'teacher-dashboard.html' : 'student-dashboard.html';
 </script>
 </body>
 </html>

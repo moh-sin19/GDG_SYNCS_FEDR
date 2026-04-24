@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TaskFlow – Teacher Dashboard</title>
-  <link rel="stylesheet" href="css/style" />
-  <link rel="stylesheet" href="css/pages" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/pages.css" />
   <style>
     .role-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(79,110,247,.15);color:#7a9af8;border:1px solid rgba(79,110,247,.25);border-radius:20px;font-size:.72rem;font-weight:600;padding:.2rem .7rem;letter-spacing:.04em;text-transform:uppercase}
     .submission-row{cursor:pointer;transition:background .1s}
@@ -67,14 +67,14 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Teacher Menu</div>
-      <a href="teacher-dashboard" class="nav-item active">
+      <a href="teacher-dashboard.html" class="nav-item active">
         <span class="nav-icon">🏠</span> Dashboard
       </a>
       <a href="#" class="nav-item" onclick="showTab('assigned');return false;">
         <span class="nav-icon">📋</span> Assigned Tasks
         <span class="nav-badge" id="sidebar-task-count">0</span>
       </a>
-      <a href="#" class="nav-item" onclick="showTabs('submissions');return false;">
+      <a href="#" class="nav-item" onclick="showTab('submissions');return false;">
         <span class="nav-icon">📬</span> Submissions
       </a>
       <a href="settings.html" class="nav-item">
@@ -129,8 +129,8 @@
 
       <div class="tab-bar">
         <div class="tab active" id="tab-assigned"    onclick="showTab('assigned')">Assigned Tasks</div>
-        <div class="tab"        id="tab-submissions" onclick="showTabs('submissions')">Submissions</div>
-        <div class="tab"        id="tab-setting"     onclick="showTab('settings')">⚙️ Settings</div>
+        <div class="tab"        id="tab-submissions" onclick="showTab('submissions')">Submissions</div>
+        <div class="tab"        id="tab-settings"     onclick="showTab('settings')">⚙️ Settings</div>
       </div>
 
       <div id="panel-assigned">
@@ -208,7 +208,7 @@
 </div>
 
 
-<div class="overlay" id="assign-overlay" onclick="closeModal()"></div>
+<div class="overlay" id="assign-overlay" onclick="closeAssignModal()"></div>
 <div class="modal" id="assign-modal">
   <div class="modal-title">Assign New Task</div>
   <div class="form-group">
@@ -267,7 +267,11 @@
 
   
   
-  function getSubmissions() { return JSON.parse(localStorage.getItem('tf_submissions')||'[]'); }
+  function getSubmissions() {
+    const current = JSON.parse(localStorage.getItem('tf_submissions') || '[]');
+    if (current.length) return current;
+    return JSON.parse(localStorage.getItem('tf_submisions') || '[]');
+  }
   function displayStudentName(name) {
     return name.split(' ').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
   }
@@ -469,9 +473,14 @@
     const assignments = getAssignments();
     const tbody = document.getElementById('submissions-table-body');
     if (!submissions.length) { tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">No submissions yet.</td></tr>`; return; }
-    const sorted=[...submissions].sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
+    const sorted=[...submissions]
+      .filter(s => {
+        const task = assignments.find(a => a.id == s.taskId);
+        return task?.createdBy === user.email;
+      })
+      .sort((a,b)=>new Date(b.submittedAt)-new Date(a.submittedAt));
     tbody.innerHTML=sorted.map(s=>{
-      const task=assignments.find(a=>a.id===s.taskId);
+      const task=assignments.find(a=>a.id==s.taskId);
       const dot={high:'🔴',medium:'🟡',low:'🟢'}[task?.priority]||'';
       const time=new Date(s.submittedAt).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
       return `<tr><td style="font-weight:600;">${s.studentName}</td><td>${task?.title||'—'}</td><td>${dot} ${task?.priority||'—'}</td><td>${time}</td><td style="color:var(--text-muted);font-size:.85rem;">${s.note||'—'}</td></tr>`;
@@ -479,9 +488,10 @@
   }
 
   function renderStats() {
-    const a=getAssignments().filter(a=>a.createdBy===user.email), s=getSubmissions();
+    const a=getAssignments().filter(a=>a.createdBy===user.email);
+    const s=getSubmissions().filter(sub=>a.some(task=>task.id==sub.taskId));
     const total=a.length, submitted=s.length, pending=Math.max(0,total-submitted);
-    const rate=total?Math.round((pending/total)*100):0;
+    const rate=total?Math.round((submitted/total)*100):0;
     document.getElementById('stat-total').textContent=total;
     document.getElementById('stat-submitted').textContent=submitted;
     document.getElementById('stat-pending').textContent=pending;
@@ -496,6 +506,11 @@
     document.querySelector('.toast-container').appendChild(t);
     setTimeout(()=>t.remove(),3000);
   }
+
+  document.querySelector('.signout-btn')?.addEventListener('click', signOut);
+  document.querySelector('.topbar-meta .btn.btn-primary')?.addEventListener('click', openAssignModal);
+  document.querySelector('#assign-modal .btn.btn-primary')?.addEventListener('click', saveAssignment);
+  document.querySelector('#tp-profile .btn.btn-primary')?.addEventListener('click', saveTeacherProfile);
 
   renderAll();
   </script>

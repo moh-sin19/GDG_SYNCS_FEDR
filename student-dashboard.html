@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TaskFlow – Student Dashboard</title>
-  <link rel="stylesheet" href="css/style" />
-  <link rel="stylesheet" href="css/pages" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/pages.css" />
   <style>
     .role-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25);border-radius:20px;font-size:.72rem;font-weight:600;padding:.2rem .7rem;letter-spacing:.04em;text-transform:uppercase}
     .badge{display:inline-block;padding:.2rem .6rem;border-radius:20px;font-size:.72rem;font-weight:600}
@@ -114,7 +114,7 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Student Menu</div>
-      <a href="student-dashboard" class="nav-item active"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="student-dashboard.html" class="nav-item active"><span class="nav-icon">🏠</span> Dashboard</a>
       <a href="#" class="nav-item" onclick="showTab('assigned');return false;"><span class="nav-icon">📋</span> Assigned Tasks<span class="nav-badge" id="sidebar-task-count">0</span></a>
       <a href="#" class="nav-item" onclick="showTab('schedule');return false;"><span class="nav-icon">📅</span> My Schedule</a>
       <a href="#" class="nav-item" onclick="showTab('own');return false;"><span class="nav-icon">✅</span> My Tasks</a>
@@ -305,11 +305,11 @@
 
   function getAccounts()    { return JSON.parse(localStorage.getItem('tf_accounts')||'[]'); }
   function saveAccounts(a)  { localStorage.setItem('tf_accounts',JSON.stringify(a)); }
-  function getAssignments() { return JSON.parse(localStorage.getItem('tf_assignment')||'[]'); }
+  function getAssignments() { return JSON.parse(localStorage.getItem('tf_assignments')||'[]'); }
 
   
-  function getSubmissions() { return JSON.parse(localStorage.getItem('tf_submisions')||'[]'); }
-  function saveSubmissions(a){ localStorage.setItem('tf_submisions',JSON.stringify(a)); }
+  function getSubmissions() { return JSON.parse(localStorage.getItem('tf_submissions')||'[]'); }
+  function saveSubmissions(a){ localStorage.setItem('tf_submissions',JSON.stringify(a)); }
 
   function getSchedule()    { return JSON.parse(localStorage.getItem('tf_schedule_'+STUDENT_NAME)||'[]'); }
   function saveSchedule(a)  { localStorage.setItem('tf_schedule_'+STUDENT_NAME,JSON.stringify(a)); }
@@ -388,8 +388,12 @@
     showToast('Task submitted!');
   }
 
-  let calYear=new Date().getFullYear(), calMonth=3;
+  let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
   function changeMonth(d){
+    calMonth += d;
+    if (calMonth < 0) { calMonth = 11; calYear -= 1; }
+    if (calMonth > 11) { calMonth = 0; calYear += 1; }
+    renderCalendar();
   }
   function goToday(){ calYear=new Date().getFullYear(); calMonth=new Date().getMonth(); renderCalendar(); }
 
@@ -401,7 +405,7 @@
     const byDate={};
     function addEv(ds,ev){ if(!ds)return; if(!byDate[ds])byDate[ds]=[]; byDate[ds].push(ev); }
 
-    const assignments=getAssignments().filter(a=>a.assignedTo===STUDENT_NAME);
+    const assignments=getAssignments().filter(a=>a.student===STUDENT_NAME);
     const submissions=getSubmissions();
     assignments.forEach(a=>{ if(!a.dueDate)return; const sub=submissions.find(s=>s.taskId==a.id&&s.studentName===STUDENT_NAME); addEv(a.dueDate,{ label:a.title, cls:sub?'type-teacher-submitted':'type-teacher-'+(a.priority||'medium'), type:'📋 Teacher task', due:a.dueDate, priority:a.priority, status:sub?'Submitted ✓':'Pending', note:a.desc }); });
     schedule.forEach(e=>{ const ds=e.time?e.time.split('T')[0]:null; if(!ds)return; const timeStr=e.time?new Date(e.time).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}):''; addEv(ds,{ label:(timeStr?timeStr+' ':'')+e.title, cls:'type-personal', type:'📅 Personal event', due:ds, status:'', note:e.notes }); });
@@ -413,6 +417,8 @@
 
     function cell(dayNum,dateS,other){
       let cls='cal-cell'+(other?' other-month':'');
+      const dateObj = new Date(dateS + 'T00:00:00');
+      if (!other && dateObj.getTime() === today.getTime()) cls += ' today';
       const evs=(byDate[dateS]||[]);
       const evHtml=evs.slice(0,3).map(ev=>`<div class="cal-event ${ev.cls}" onclick="showPopup(event,'${encodeURIComponent(JSON.stringify(ev))}')" title="${ev.label}">${ev.label}</div>`).join('')+(evs.length>3?`<div style="font-size:.65rem;color:#555;padding:.1rem .2rem;">+${evs.length-3} more</div>`:'');
       return `<div class="${cls}"><div class="cal-day-num">${dayNum}</div>${evHtml}</div>`;
@@ -428,7 +434,7 @@
   function closePopup(){ document.getElementById('cal-popup').classList.remove('open'); }
   document.addEventListener('click',()=>closePopup());
 
-  function saveScheduleEven(){
+  function saveScheduleEvent(){
     const title=document.getElementById('sc-title').value.trim(), time=document.getElementById('sc-time').value, err=document.getElementById('sc-error');
     if(!title||!time){ err.textContent='Title and date/time are required.'; err.style.display='block'; return; }
     err.style.display='none';
@@ -498,6 +504,14 @@
 
   function showToast(msg){ const t=document.createElement('div'); t.className='toast show'; t.textContent=msg; document.querySelector('.toast-container').appendChild(t); setTimeout(()=>t.remove(),3000); }
   function renderAll(){ renderStats(); renderAssigned(); }
+  document.querySelector('.signout-btn')?.addEventListener('click', signOut);
+  document.querySelector('#panel-own .btn.btn-primary-green')?.addEventListener('click', openOwnTaskModal);
+  document.querySelector('#panel-schedule .cal-nav-btn[type="button"]:first-child')?.addEventListener('click', () => changeMonth(-1));
+  document.querySelector('#panel-schedule .cal-nav-btn[type="button"]:last-child')?.addEventListener('click', () => changeMonth(1));
+  document.querySelector('#panel-schedule .cal-add-row button')?.addEventListener('click', saveScheduleEvent);
+  document.querySelector('#sp-profile .btn.btn-primary-green')?.addEventListener('click', saveProfile);
+  document.querySelector('#sp-data .btn.btn-danger')?.addEventListener('click', clearMyTasks);
+
   renderAll();
   </script>
 </body>
